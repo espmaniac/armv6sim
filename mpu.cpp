@@ -90,3 +90,7 @@ uint32_t MPU::read32(uint32_t addr) {
             (region->memory[addr]);
     }
 }
+
+bool MPU::faultStatus() const {
+    return fault;
+}
