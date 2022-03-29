@@ -1,2 +1,2 @@
 # armv6sim
-armv6 simulator
+compile: g++ main.cpp arm.cpp mpu.cpp
