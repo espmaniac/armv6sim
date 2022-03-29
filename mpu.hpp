@@ -34,5 +34,6 @@ public:
 private:
     MemoryRegion memreg[8];
     uint16_t regionCount;
+    bool fault;
 };
 
