@@ -46,6 +46,7 @@ uint8_t MPU::read8(uint32_t addr) {
     MemoryRegion *region = getRegion(addr);
     if (region != nullptr)
         return region->memory[addr - region->base_address];
+    else return -1;
 }
 
 void MPU::write16(uint32_t addr, uint16_t value) {
@@ -64,7 +65,7 @@ uint16_t MPU::read16(uint32_t addr) {
         //return *(uint16_t*)&region->memory[addr - region->base_address];
         addr -= region->base_address;
         return (region->memory[addr + 1] << 8) | (region->memory[addr]);
-    }
+    } else return -1;
 }
 
 void MPU::write32(uint32_t addr, uint32_t value) {
@@ -88,7 +89,7 @@ uint32_t MPU::read32(uint32_t addr) {
             (region->memory[addr + 2] << 16) |
             (region->memory[addr + 1] << 8) |
             (region->memory[addr]);
-    }
+    } else return -1;
 }
 
 bool MPU::faultStatus() const {
