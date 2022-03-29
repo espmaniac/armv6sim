@@ -1,6 +1,6 @@
 #include "mpu.hpp"
 
-MPU::MPU() : regionCount(0) {
+MPU::MPU() : regionCount(0), fault(false) {
     //memreg = new MemoryRegion[8];
 }
 
@@ -19,6 +19,8 @@ MPU::MemoryRegion* MPU::getRegion(uint32_t addr) {
         )
             region = &memreg[i];
     }
+    if (region == nullptr)
+        fault = true;
     return region;
 }
 
@@ -36,46 +38,55 @@ uint64_t MPU::regionSize(uint8_t registerSize) const {
 
 void MPU::write8(uint32_t addr, uint8_t value) {
     MemoryRegion *region = getRegion(addr);
-    region->memory[addr - region->base_address] = value;
+    if (region != nullptr)
+        region->memory[addr - region->base_address] = value;
 }
 
 uint8_t MPU::read8(uint32_t addr) {
     MemoryRegion *region = getRegion(addr);
-    return region->memory[addr - region->base_address];
+    if (region != nullptr)
+        return region->memory[addr - region->base_address];
 }
 
 void MPU::write16(uint32_t addr, uint16_t value) {
     MemoryRegion *region = getRegion(addr);
-    
-    //*(uint16_t*)&region->memory[addr - region->base_address] = value;
-    addr -= region->base_address;
-    region->memory[addr] = value & 0xFF;
-    region->memory[addr + 1] = (value >> 8) & 0xFF;
+    if (region != nullptr) {
+        //*(uint16_t*)&region->memory[addr - region->base_address] = value;
+        addr -= region->base_address;
+        region->memory[addr] = value & 0xFF;
+        region->memory[addr + 1] = (value >> 8) & 0xFF;
+    }
 }
 
 uint16_t MPU::read16(uint32_t addr) {
     MemoryRegion *region = getRegion(addr);
-    //return *(uint16_t*)&region->memory[addr - region->base_address];
-    addr -= region->base_address;
-    return (region->memory[addr + 1] << 8) | (region->memory[addr]);
+    if (region != nullptr) {
+        //return *(uint16_t*)&region->memory[addr - region->base_address];
+        addr -= region->base_address;
+        return (region->memory[addr + 1] << 8) | (region->memory[addr]);
+    }
 }
 
 void MPU::write32(uint32_t addr, uint32_t value) {
     MemoryRegion *region = getRegion(addr);
-    //*(uint32_t*)&region->memory[addr - region->base_address] = value;
-    addr -= region->base_address;
-    region->memory[addr] = value & 0xFF;
-    region->memory[addr + 1] = (value >> 8) & 0xFF;
-    region->memory[addr + 2] = (value >> 16) & 0xFF;
-    region->memory[addr + 3] = (value >> 24) & 0xFF;
+    if (region != nullptr) {
+        //*(uint32_t*)&region->memory[addr - region->base_address] = value;
+        addr -= region->base_address;
+        region->memory[addr] = value & 0xFF;
+        region->memory[addr + 1] = (value >> 8) & 0xFF;
+        region->memory[addr + 2] = (value >> 16) & 0xFF;
+        region->memory[addr + 3] = (value >> 24) & 0xFF;
+    }
 }
 
 uint32_t MPU::read32(uint32_t addr) {
     MemoryRegion *region = getRegion(addr);
-    //return *(uint32_t*)&region->memory[addr - region->base_address];
-    addr -= region->base_address;
-    return (region->memory[addr + 3] << 24) |
-        (region->memory[addr + 2] << 16) |
-        (region->memory[addr + 1] << 8) |
-        (region->memory[addr]);
+    if (region != nullptr) {
+        //return *(uint32_t*)&region->memory[addr - region->base_address];
+        addr -= region->base_address;
+        return (region->memory[addr + 3] << 24) |
+            (region->memory[addr + 2] << 16) |
+            (region->memory[addr + 1] << 8) |
+            (region->memory[addr]);
+    }
 }
