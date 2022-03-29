@@ -51,7 +51,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 			setRegister(Rd, shifter_operand - Rn);
 			//C_FLAG = (((shifter_operand >> 31) - (Rn >> 31) - (registers[Rd] >> 31)) <= 1);
 			C_FLAG = !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
-			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((shifter_operand >> 31) != (readRe
+			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((shifter_operand >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0100: // ADD
@@ -110,10 +110,10 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 			printf("CMP\n");
 			const uint32_t alu_out = Rn - shifter_operand; 
 			//setC( (((Rn >> 31) - (shifter_operand >> 31) - (alu_out >> 31)) <= 1) );
-			setFlag(C, !(((Rn >> 31) - (shifter_operand >> 31) - (alu_out >> 31)) & (1 << 31)) );
+			setFlag(C, !(((Rn >> 31) - (shifter_operand >> 31) - (alu_out >> 31)) & (1 << 31)));
 			setFlag(N, alu_out & (1 << 31));
 			setFlag(Z, alu_out == 0);
-			setFlag(V, ((Rn >> 31) != (shifter_operand >> 31)) && ((Rn >> 31) != (alu_out >> 31))) ;
+			setFlag(V, ((Rn >> 31) != (shifter_operand >> 31)) && ((Rn >> 31) != (alu_out >> 31)));
 			return;
 		}
 
@@ -132,8 +132,8 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 			const uint32_t alu_out = Rn + shifter_operand;
 			setFlag(N, alu_out & (1 << 31));
 			setFlag(Z, alu_out == 0);
-			setFlag(C,  ((Rn >> 31) + (shifter_operand >> 31)) > (alu_out >> 31) );
-			setFlag(V, ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (alu_out >> 31)) );
+			setFlag(C, ((Rn >> 31) + (shifter_operand >> 31)) > (alu_out >> 31));
+			setFlag(V, ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (alu_out >> 31)));
 			return;
 		}
 		
