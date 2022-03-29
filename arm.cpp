@@ -22,79 +22,64 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		shifter_carry_out = shifter((instruction >> 5) & 0x3, shift, shifter_operand, instruction & (1 << 4));
 	} else
 		return;
+	
+	bool C_FLAG = shifter_carry_out;
+	bool V_FLAG = getFlag(V);
 
 	switch((instruction >> 21) & 0xF) {
 		case 0b0000: // AND
 			printf("AND");	
 			setRegister(Rd, Rn & shifter_operand);
-			if (instruction & (1 << 20))
-				setFlag(C, shifter_carry_out);
 			break;
 		
 		case 0b0001: // EOR
 			printf("EOR");
 			setRegister(Rd, Rn ^ shifter_operand);
-			if (instruction & (1 << 20)) 
-				setFlag(C, shifter_carry_out);
 			break;
 
 
 		case 0b0010: // SUB
 			printf("SUB");
 			setRegister(Rd, Rn - shifter_operand);
-			if (instruction & (1 << 20)) {
-				//setC( (((Rn >> 31) - (shifter_operand >> 31) - (registers[Rd] >> 31)) <= 1) );
-				setFlag(C, !(((Rn >> 31) - (shifter_operand >> 31) - (readRegister(Rd) >> 31)) & (1 << 31)) );
-				setFlag(V, ((Rn >> 31) != (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31)) );
-			}
+			//C_FLAG = (((Rn >> 31) - (shifter_operand >> 31) - (registers[Rd] >> 31)) <= 1) ;
+			C_FLAG = !(((Rn >> 31) - (shifter_operand >> 31) - (readRegister(Rd) >> 31)) & (1 << 31)) ;
+			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;	
 
 		case 0b0011: // RSB
 			printf("RSB");
 			setRegister(Rd, shifter_operand - Rn);
-			if (instruction & (1 << 20)) {
-				//setC( (((shifter_operand >> 31) - (Rn >> 31) - (registers[Rd] >> 31)) <= 1) );
-				setFlag(C, !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31)) );
-				setFlag(V, ((Rn >> 31) != (shifter_operand >> 31)) && ((shifter_operand >> 31) != (readRegister(Rd) >> 31)) );
-			}
+			//C_FLAG = (((shifter_operand >> 31) - (Rn >> 31) - (registers[Rd] >> 31)) <= 1);
+			C_FLAG = !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
+			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((shifter_operand >> 31) != (readRe
 			break;
 
 		case 0b0100: // ADD
 			printf("ADD");
 			setRegister(Rd, Rn + shifter_operand);
-			if (instruction & (1 << 20)) {
-				setFlag(C, ((Rn >> 31) + (shifter_operand >> 31)) > (readRegister(Rd) >> 31) );
-				setFlag(V, ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31)) );
-			}
+			C_FLAG = ((Rn >> 31) + (shifter_operand >> 31)) > (readRegister(Rd) >> 31);
+			V_FLAG = ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0101: // ADC
 			printf("ADC");
 			setRegister(Rd, Rn + shifter_operand + (getFlag(C)));
-
-			if (instruction & (1 << 20)) {
-				setFlag(C, ((Rn >> 31) + (shifter_operand >> 31)) > (readRegister(Rd) >> 31) );
-				setFlag(V, ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31)) );
-			}
+			C_FLAG = ((Rn >> 31) + (shifter_operand >> 31)) > (readRegister(Rd) >> 31);
+			V_FLAG = ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0110: // SBC
 			printf("SBC");
 			setRegister(Rd, Rn - shifter_operand - !(getFlag(C)));
-			if (instruction & (1 << 20)) {
-				setFlag(C, !(((Rn >> 31) - (shifter_operand >> 31) - (readRegister(Rd) >> 31)) & (1 << 31)) );
-				setFlag(V, ((Rn >> 31) != (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31)) );	
-			}
+			C_FLAG = !(((Rn >> 31) - (shifter_operand >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
+			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0111: // RSC
 			printf("RSC");
 			setRegister(Rd, shifter_operand - Rn - !(getFlag(C)));
-			if (instruction & (1 << 20)) {
-				//setC( (((shifter_operand >> 31) - (Rn >> 31) - (registers[Rd] >> 31)) <= 1) );
-				setFlag(C, !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31)) );
-				setFlag(V, ((Rn >> 31) != (shifter_operand >> 31)) && ((shifter_operand >> 31) != (readRegister(Rd) >> 31)) );
-			}
+			C_FLAG = !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
+			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((shifter_operand >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b1000: { // TST
@@ -154,10 +139,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		
 		case 0b1100: // ORR
 			printf("ORR");
-			setRegister(Rd, Rn | shifter_operand);
-			if (instruction & (1 << 20))
-				setFlag(C, shifter_carry_out);		
-
+			setRegister(Rd, Rn | shifter_operand);	
 			break;
 
 		case 0b1101: // MOV or CPY(pseudo-instruction)
@@ -165,15 +147,11 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 				return;
 			printf("MOV");
 			setRegister(Rd, shifter_operand);
-			if (instruction & (1 << 20)) 
-				setFlag(C, shifter_carry_out);
 			break;
 
 		case 0b1110: // BIC
 			printf("BIC");
 			setRegister(Rd, Rn & ~shifter_operand);
-			if (instruction & (1 << 20))
-				setFlag(C, shifter_carry_out);
 			break;
 
 		case 0b1111: // MVN
@@ -181,9 +159,6 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 				return;
 			printf("MVN");
 			setRegister(Rd, ~shifter_operand);
-
-			if (instruction & (1 << 20))
-				setFlag(C, shifter_carry_out);
 			break;
 
 		default: break;
@@ -191,6 +166,8 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 
 	printf("\n");
 	if (instruction & (1 << 20)) {
+		setFlag(C, C_FLAG);
+		setFlag(V, V_FLAG);
 		setFlag(N, readRegister(Rd) & (1 << 31));
 		setFlag(Z, readRegister(Rd) == 0);
 	}
