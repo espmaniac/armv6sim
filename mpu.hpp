@@ -31,6 +31,8 @@ public:
 
     uint32_t read32(uint32_t);
 
+    bool faultStatus() const;
+    
 private:
     MemoryRegion memreg[8];
     uint16_t regionCount;
