@@ -564,24 +564,25 @@ MPU *ARM::getMpu() const {
 void ARM::decodeMediaInstructions(uint32_t instruction) {
 	if ((((instruction >> 25) & 0x7) != 0b011) || !(instruction & (1 << 4))) return;
 	const uint8_t Rm = instruction & 0xF;
-	const uint8_t Rd = (instruction >> 12) & 0xF;
-	const uint8_t Rn = (instruction >> 16) & 0xF;
+	
 	
 	if (((instruction >> 23) & 0x3) == 0b01) {
+		const uint8_t Rd = (instruction >> 12) & 0xF;
+		const uint8_t Rn = (instruction >> 16) & 0xF;
 		if ((((instruction >> 20) & 0x3) == 0b11) && (((instruction >> 16) & 0xF) == 0xF) && (((instruction >> 8) & 0xF) == 0xF)) { // REV REV16 REVSH
 			if ((instruction & (1 << 22)) && ((instruction >> 5) & 0x7)  == 0b101) {// REVSH
-				printf("REVSH\n");
+				printf("REVSH");
 				const uint16_t value = readRegister(Rm);
 				setRegister(Rd, ((value >> 8) & 0x00FF) | ((value<< 8) & 0xFF00) | 
 					(((value & (1 << 7)) ? 0xFFFF : 0) << 16));
 			} else if (!(instruction & (1 << 22))) { // REV OR REV16
 				const uint32_t value = readRegister(Rm);
 				if (((instruction >> 5) & 0x7) == 0b001) { //REV
-					printf("REV\n");
+					printf("REV");
 					setRegister(Rd,  ((value>>24)&0xff) | ((value<<8)&0xff0000) | 
 						((value>>8)&0xff00) | ((value<<24)&0xff000000));
 				} else if (((instruction >> 5) & 0x7) == 0b101) { // REV16
-					printf("REV16\n");
+					printf("REV16");
 					setRegister(Rd, ((value >> 8) & 0xFF) | ((value & 0xFF) << 8) | 
 						(((value >> 24) & 0xFF) << 16) | (((value >> 16) & 0xFf) << 24));
 				}
@@ -596,9 +597,9 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 						((signExtend((operand2 >> 16) & 0xFF, 8, 16) << 16)));
 
 					if (Rn == 0b1111)
-						printf("SXTB16\n");
+						printf("SXTB16");
 					else {
-						printf("SXTAB16\n");
+						printf("SXTAB16");
 						setRegister(Rd, ((((readRegister(Rd) >> 16) & 0xFFFF) + ((operand >> 16) & 0xFFFF)) << 16) | 
 							(((readRegister(Rd) & 0xFFFF) + (operand & 0xFFFF)) & 0xFFFF));
 					}
@@ -607,9 +608,9 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 				case 0b010: // SXTAB or SXTB
 					setRegister(Rd, signExtend(operand2 & 0xFF, 8, 32));
 					if (Rn == 0b1111)
-						printf("SXTB\n");
+						printf("SXTB");
 					else {
-						printf("SXTAB\n");
+						printf("SXTAB");
 						setRegister(Rd, readRegister(Rd) + operand);
 					}
 					break;
@@ -617,9 +618,9 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 				case 0b011: // SXTAH or SXTH
 					setRegister(Rd, signExtend(operand2 & 0xFFFF, 16, 32));
 					if (Rn == 0b1111)
-						printf("SXTH\n");
+						printf("SXTH");
 					else {
-						printf("SXTAH\n");
+						printf("SXTAH");
 						setRegister(Rd, readRegister(Rd) + operand);
 					}
 					break;
@@ -627,9 +628,9 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 				case 0b100: // UXTAB16 or UXTB16
 					setRegister(Rd, operand2 & 0x00FF00FF);
 					if (Rn == 0b1111)
-						printf("UXTB16\n");
+						printf("UXTB16");
 					else {
-						printf("UXTAB16\n");
+						printf("UXTAB16");
 						setRegister(Rd, ((((readRegister(Rd) >> 16) & 0xFF) + ((operand >> 16) & 0xFFFF)) << 16) |
 							(((readRegister(Rd) & 0xFFFF)) + (operand & 0xFFFF)) & 0xFFFF);
 					}
@@ -638,9 +639,9 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 				case 0b110: // UXTAB or UXTB
 					setRegister(Rd, operand2 & 0x000000FF);
 					if (Rn == 0b1111)
-						printf("UXTB\n");
+						printf("UXTB");
 					else {
-						printf("UXTAB\n");
+						printf("UXTAB");
 						setRegister(Rd, readRegister(Rd) + operand);
 					}
 					break;
@@ -648,9 +649,9 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 				case 0b111: // UXTAH or UXTH
 					setRegister(Rd, operand2 & 0x0000FFFF);
 					if (Rn == 0b1111)
-						printf("UXTH\n");
+						printf("UXTH");
 					else {
-						printf("UXTAH\n");
+						printf("UXTAH");
 						setRegister(Rd, readRegister(Rd) + operand);
 					}
 					break;
@@ -658,7 +659,48 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 				default: break;
 			}
 		}
+	} else if (((instruction >> 23) & 0x3) == 0b10) {
+		const uint8_t Rd = (instruction >> 16) & 0xF;
+		const uint32_t Rn = (instruction >> 12) & 0xF;
+		const uint8_t Rs = (instruction >> 8) & 0xF; 
+		const uint32_t operand2 = (instruction & (1 << 5)) ? 
+			((readRegister(Rs) >> 16) | (readRegister(Rs) << (32 - 16))) : readRegister(Rs);
+
+		const int32_t product1 = (int16_t)(readRegister(Rm) & 0xFFFF) * (int16_t)(operand2 & 0xFFFF);
+		const int32_t product2 = (int16_t)((readRegister(Rm) >> 16) & 0xFFFF) * (int16_t)((operand2 >> 16) & 0xFFFF);
+		if ((((instruction >> 20) & 0x7) == 0)) { // SMLAD or SMUAD or SMLSD or SMUSD
+			if (((instruction >> 6) & 0x3) == 0) { // SMUAD or SMLAD
+				if (Rn == 0b1111) {
+					printf("SMUAD");
+					setRegister(Rd, product1 + product2);
+					if (((product1 >> 31) == (product2 >> 31)) && ((product1 >> 31) != (readRegister(Rd) >> 31)))
+						setFlag(Q, 1);
+				} else {
+					printf("SMLAD");
+					setRegister(Rd,(readRegister(Rn) + product1 + product2));
+					if (((readRegister(Rn) >> 31) == ((product1 + product2) >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31)))
+						setFlag(Q, 1);
+				}
+			} else if (((instruction >> 6) & 0x3) == 0b01) { // SMLSD or SMUSD
+				if (Rn == 0b1111) {
+					printf("SMUSD");
+					setRegister(Rd, product1 - product2);
+				} else {
+					printf("SMLSD");
+					setRegister(Rd, readRegister(Rn) + (product1 - product2)); // signed subtraction
+					if (((readRegister(Rn) >> 31) == ((uint32_t)(product1 - product2) >> 31)) && ((readRegister(Rn) >> 31) != (readRegister(Rd) >> 31)))
+						setFlag(Q, 1);
+				}
+			}
+		} else if ((((instruction >> 20) & 0x7) == 0b100) && (((instruction >> 6) & 0x3) == 0)) { // SMLALD
+			printf("SMLALD");
+			int64_t result = ((((int64_t)readRegister(Rd) & 0xFFFFFFFF) << 32) | (readRegister(Rn) & 0xFFFFFFFF));
+			result += (int64_t)product1 + (int64_t)product2;		
+			setRegister(Rn, result & 0xFFFFFFFF);
+			setRegister(Rd, (result >> 32) & 0xFFFFFFFF);
+		}
 	} 
+	printf("\n");
 
 }
 */
