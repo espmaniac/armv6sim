@@ -51,6 +51,7 @@ private:
 
 	enum { // CPSR
 		T = 5,
+		Q = 27,
 		V = 28,
 		C = 29,
 		Z = 30,
