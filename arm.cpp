@@ -678,7 +678,7 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 				} else {
 					printf("SMLAD");
 					setRegister(Rd,(readRegister(Rn) + product1 + product2));
-					if (((readRegister(Rn) >> 31) == ((product1 + product2) >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31)))
+					if (((readRegister(Rn) >> 31) == ((product1 + product2) >> 31)) && ((readRegister(Rn) >> 31) != (readRegister(Rd) >> 31)))
 						setFlag(Q, 1);
 				}
 			} else if (((instruction >> 6) & 0x3) == 0b01) { // SMLSD or SMUSD
