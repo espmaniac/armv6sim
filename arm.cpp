@@ -661,7 +661,7 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 		}
 	} else if (((instruction >> 23) & 0x3) == 0b10) {
 		const uint8_t Rd = (instruction >> 16) & 0xF;
-		const uint32_t Rn = (instruction >> 12) & 0xF;
+		const uint8_t Rn = (instruction >> 12) & 0xF;
 		const uint8_t Rs = (instruction >> 8) & 0xF; 
 		const uint32_t operand2 = (instruction & (1 << 5)) ? 
 			((readRegister(Rs) >> 16) | (readRegister(Rs) << (32 - 16))) : readRegister(Rs);
