@@ -16,7 +16,7 @@ public:
 	
 	void decodeMultiply(uint32_t);
 
-	void decode();
+	void execute();
 	
 	bool shifter(uint8_t, uint32_t, uint32_t&, bool);
 
