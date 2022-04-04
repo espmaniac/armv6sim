@@ -26,7 +26,7 @@ int main() {
 	arm.getMpu()->createRegion(0, Eheader->e_entry);
 	arm.setRegister(13, Eheader->e_entry);
 	arm.setPc(Eheader->e_entry);
-	arm.decode();
+	arm.execute();
 
 	delete[] payload;
 	file.close();
