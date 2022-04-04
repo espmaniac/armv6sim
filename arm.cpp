@@ -458,7 +458,7 @@ void ARM::decodeMultiply(uint32_t instruction) {
 
 }
 
-void ARM::decode() {
+void ARM::execute() {
 	usedPc = false;
 	while(true) {
 		if (mpu.faultStatus()) break;
