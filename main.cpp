@@ -14,7 +14,6 @@ int main() {
 	file.read(payload, size);
 	Elf32_Ehdr *Eheader = (Elf32_Ehdr*)payload;
 	Elf32_Phdr *Pheader = (Elf32_Phdr*)(payload + Eheader->e_phoff);
-	void *entry_point = nullptr;
 	
 	for (uint32_t i = 0; i < Eheader->e_phnum; ++i) {
 		if (Pheader[i].p_type == PT_LOAD) {
