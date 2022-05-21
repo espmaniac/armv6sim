@@ -1,6 +1,6 @@
 #include "mpu.hpp"
 
-MPU::MPU() : regionCount(0), fault(false) {
+MPU::MPU() : regionCount(0), memreg{0}, fault(false) {
     //memreg = new MemoryRegion[8];
 }
 
