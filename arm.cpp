@@ -298,7 +298,6 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 			setRegister(Rn, address += (instruction & (1 << 23)) ? offset : -offset); // U Bit
 
 	} else if ((((instruction >> 25) & 0x7) == 0b000) && (instruction & (1 << 7)) && (instruction & (1 << 4))) { // Miscellaneous
-		printf("\nMiscellaneous\n");
 		uint32_t offset = 0;
 		
 		if(instruction & (1 << 22)) // immidiate
@@ -326,28 +325,34 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 				break;
 			}
 			case 0b001: // Store halfword
+				printf("\nSTRH\n");
 				mpu.write16(address, readRegister(Rd));
 				break;
 
 			case 0b010: // Load doubleword
+				printf("\nLDRD\n");
 				setRegister(Rd, mpu.read32(address));
 				setRegister(Rd + 1, mpu.read32(address + 4));
 				break;
 
 			case 0b011: // Store doubleword
+				printf("\nSTRD\n");
 				mpu.write32(address, readRegister(Rd));
 				mpu.write32(address + 4, readRegister(Rd + 1));
 				break;
 
 			case 0b101: // Load unsigned halfword
+				printf("\nLDRH\n");
 				setRegister(Rd, mpu.read16(address));
 				break;
 
 			case 0b110: // Load signed byte
+				printf("\nLDRSB\n");
 				setRegister(Rd, signExtend(mpu.read8(address), 8, 32));
 				break;
 
 			case 0b111: // Load signed halfword
+				printf("\nLDRSH\n");
 				setRegister(Rd, signExtend(mpu.read16(address), 16, 32));
 				break;
 
