@@ -299,8 +299,14 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 
 	} else if ((((instruction >> 25) & 0x7) == 0b000) && (instruction & (1 << 7)) && (instruction & (1 << 4))) { // Miscellaneous
 		printf("\nMiscellaneous\n");
-		uint32_t offset = (instruction & (1 << 22)) ?
-			((((instruction >> 8) & 0xF) << 4) | (instruction & 0xF)) : readRegister(Rm);
+		uint32_t offset = 0;
+		
+		if(instruction & (1 << 22)) // immidiate
+			offset = ((((instruction >> 8) & 0xF) << 4) | (instruction & 0xF));
+		else {
+			if (((instruction >> 8) & 0xF) != 0) return;
+			offset = readRegister(Rm);
+		}
 		
 		if (instruction & (1 << 24))
 			address += (instruction & (1 << 23)) ? offset : -offset;
