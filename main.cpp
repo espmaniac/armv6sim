@@ -22,8 +22,8 @@ int main() {
 			memcpy(data, (void*)(payload + Pheader[i].p_offset), Pheader[i].p_filesz);
 		}
 	}
-	arm.getMpu()->createRegion(0, Eheader->e_entry);
-	arm.setRegister(13, Eheader->e_entry);
+	arm.getMpu()->createRegion(0xC0000000, 0x10000); // stack region
+	arm.setRegister(13, 0xC0000000, 0xC0000000 + 0x10000); // stack pointer
 	arm.setPc(Eheader->e_entry);
 	arm.execute();
 
