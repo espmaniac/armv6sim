@@ -471,7 +471,7 @@ void ARM::decodeMultiply(uint32_t instruction) {
 
 void ARM::execute() {
 	usedPc = false;
-	while(true) {
+	while(true/*registers[15] != 0*/) {
 		if (mpu.faultStatus()) break;
 		uint32_t instruction = mpu.read32(readPc());
 		if (condition(instruction)) {
