@@ -28,18 +28,18 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 
 	switch((instruction >> 21) & 0xF) {
 		case 0b0000: // AND
-			printf("AND");	
+			printf("AND r%d = %x & %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn & shifter_operand);
 			break;
 		
 		case 0b0001: // EOR
-			printf("EOR");
+			printf("EOR r%d = %x ^ %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn ^ shifter_operand);
 			break;
 
 
 		case 0b0010: // SUB
-			printf("SUB");
+			printf("SUB r%d = %x - %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn - shifter_operand);
 			//C_FLAG = (((Rn >> 31) - (shifter_operand >> 31) - (registers[Rd] >> 31)) <= 1) ;
 			C_FLAG = !(((Rn >> 31) - (shifter_operand >> 31) - (readRegister(Rd) >> 31)) & (1 << 31)) ;
@@ -47,7 +47,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 			break;	
 
 		case 0b0011: // RSB
-			printf("RSB");
+			printf("RSB r%d = %x - %x", Rd, shifter_operand, Rn);
 			setRegister(Rd, shifter_operand - Rn);
 			//C_FLAG = (((shifter_operand >> 31) - (Rn >> 31) - (registers[Rd] >> 31)) <= 1);
 			C_FLAG = !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
@@ -55,28 +55,28 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 			break;
 
 		case 0b0100: // ADD
-			printf("ADD");
+			printf("ADD r%d = %x + %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn + shifter_operand);
 			C_FLAG = ((Rn >> 31) + (shifter_operand >> 31)) > (readRegister(Rd) >> 31);
 			V_FLAG = ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0101: // ADC
-			printf("ADC");
+			printf("ADC r%d = %x + %x + %x", Rd, Rn, shifter_operand, getFlag(C));
 			setRegister(Rd, Rn + shifter_operand + (getFlag(C)));
 			C_FLAG = ((Rn >> 31) + (shifter_operand >> 31)) > (readRegister(Rd) >> 31);
 			V_FLAG = ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0110: // SBC
-			printf("SBC");
+			printf("SBC r%d = %x - %x - %x", Rd, Rn, shifter_operand, !(getFlag(C)));
 			setRegister(Rd, Rn - shifter_operand - !(getFlag(C)));
 			C_FLAG = !(((Rn >> 31) - (shifter_operand >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
 			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0111: // RSC
-			printf("RSC");
+			printf("RSC r%d = %x - %x - %x", Rd, shifter_operand, Rn, !(getFlag(C)));
 			setRegister(Rd, shifter_operand - Rn - !(getFlag(C)));
 			C_FLAG = !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
 			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((shifter_operand >> 31) != (readRegister(Rd) >> 31));
@@ -85,7 +85,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		case 0b1000: { // TST
 			if (!(instruction & (1 << 20)) && ((instruction >> 12) & 0xF) != 0)
 				return;
-			printf("TST\n");
+			printf("TST %x & %x\n", Rn, shifter_operand);
 			const uint32_t alu_out = Rn & shifter_operand;
 			setFlag(N, alu_out & (1 << 31));
 			setFlag(Z, alu_out == 0);
@@ -96,7 +96,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		case 0b1001: { // TEQ
 			if (!(instruction & (1 << 20)) && ((instruction >> 12) & 0xF) != 0)
 				return;
-			printf("TEQ\n");
+			printf("TEQ %x ^ %x\n", Rn, shifter_operand);
 			const uint32_t alu_out = Rn ^ shifter_operand;
 			setFlag(C, shifter_carry_out);
 			setFlag(N, alu_out & (1 << 31));
@@ -107,7 +107,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		case 0b1010: { // CMP
 			if (!(instruction & (1 << 20)) && ((instruction >> 12) & 0xF) != 0)
 				return;
-			printf("CMP\n");
+			printf("CMP %x - %x\n", Rn, shifter_operand);
 			const uint32_t alu_out = Rn - shifter_operand; 
 			//setC( (((Rn >> 31) - (shifter_operand >> 31) - (alu_out >> 31)) <= 1) );
 			setFlag(C, !(((Rn >> 31) - (shifter_operand >> 31) - (alu_out >> 31)) & (1 << 31)));
@@ -128,7 +128,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 				} else if (((instruction >> 12) & 0xF) != 0) // not (CMN or CLZ)
 					return;
 			}
-			printf("CMN\n");
+			printf("CMN %x + %x\n", Rn, shifter_operand);
 			const uint32_t alu_out = Rn + shifter_operand;
 			setFlag(N, alu_out & (1 << 31));
 			setFlag(Z, alu_out == 0);
@@ -138,33 +138,33 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		}
 		
 		case 0b1100: // ORR
-			printf("ORR");
+			printf("ORR r%d = %x | %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn | shifter_operand);	
 			break;
 
 		case 0b1101: // MOV or CPY(pseudo-instruction)
 			if (((instruction >> 16) & 0xF) != 0)
 				return;
-			printf("MOV");
+			printf("MOV r%d", Rd);
 			setRegister(Rd, shifter_operand);
 			break;
 
 		case 0b1110: // BIC
-			printf("BIC");
+			printf("BIC r%d = %x & %x", Rd, Rn, ~shifter_operand);
 			setRegister(Rd, Rn & ~shifter_operand);
 			break;
 
 		case 0b1111: // MVN
 			if (((instruction >> 16) & 0xF) != 0)
 				return;
-			printf("MVN");
+			printf("MVN r%d", Rd);
 			setRegister(Rd, ~shifter_operand);
 			break;
 
 		default: break;
 	}
 
-	printf("\n");
+	printf(" = %x\n", readRegister(Rd));
 	if (instruction & (1 << 20)) {
 		setFlag(C, C_FLAG);
 		setFlag(V, V_FLAG);
