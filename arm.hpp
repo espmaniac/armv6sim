@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <cstdint>
 #include <string.h>
 #include "mpu.hpp"
@@ -33,10 +32,6 @@ public:
 	uint32_t readPc() const;
 	
 	void setPc(uint32_t);
-
-	void dumpRegisters();
-	
-	void printFlags();
 	
 	MPU *getMpu() const;
 	
