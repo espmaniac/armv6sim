@@ -247,10 +247,17 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 	uint32_t address = readRegister(Rn);
 
 	if (((instruction >> 26) & 0x3) == 0b01) { // LOAD AND STORE
-		uint32_t offset = (instruction & (1 << 25)) ? readRegister(Rm) : (instruction & 0xFFF);
-		if (instruction & (1 << 25) && (((instruction >> 4) & 0xFF) != 0)) // shift
-			shifter((instruction >> 5) & 0x3, (instruction >> 7) & 0x1F, offset, true);
+		uint32_t offset = 0;
 
+		if (instruction & (1 << 25)) {
+			offset = readRegister(Rm);
+			if (instruction & (1 << 4))
+				return;
+			else if (((instruction >> 5) & 0x7F) != 0)
+				shifter((instruction >> 5) & 0x3, (instruction >> 7) & 0x1F, offset, true);
+		} else
+			offset = instruction & 0xFFF;
+		
 		if (instruction & (1 << 24)) // P bit pre-indexed
 			address += (instruction & (1 << 23)) ? offset : -offset; // U Bit
 
