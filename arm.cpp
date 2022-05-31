@@ -253,7 +253,7 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 			offset = readRegister(Rm);
 			if (instruction & (1 << 4))
 				return;
-			else if (((instruction >> 4) & 0xFF) != 0)
+			else if (((instruction >> 5) & 0x7F) != 0)
 				shifter((instruction >> 5) & 0x3, (instruction >> 7) & 0x1F, offset, true);
 		} else
 			offset = instruction & 0xFFF;
