@@ -28,18 +28,14 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 
 	switch((instruction >> 21) & 0xF) {
 		case 0b0000: // AND
-			printf("AND r%d = %x & %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn & shifter_operand);
 			break;
 		
 		case 0b0001: // EOR
-			printf("EOR r%d = %x ^ %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn ^ shifter_operand);
 			break;
 
-
 		case 0b0010: // SUB
-			printf("SUB r%d = %x - %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn - shifter_operand);
 			//C_FLAG = (((Rn >> 31) - (shifter_operand >> 31) - (registers[Rd] >> 31)) <= 1) ;
 			C_FLAG = !(((Rn >> 31) - (shifter_operand >> 31) - (readRegister(Rd) >> 31)) & (1 << 31)) ;
@@ -47,7 +43,6 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 			break;	
 
 		case 0b0011: // RSB
-			printf("RSB r%d = %x - %x", Rd, shifter_operand, Rn);
 			setRegister(Rd, shifter_operand - Rn);
 			//C_FLAG = (((shifter_operand >> 31) - (Rn >> 31) - (registers[Rd] >> 31)) <= 1);
 			C_FLAG = !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
@@ -55,28 +50,24 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 			break;
 
 		case 0b0100: // ADD
-			printf("ADD r%d = %x + %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn + shifter_operand);
 			C_FLAG = ((Rn >> 31) + (shifter_operand >> 31)) > (readRegister(Rd) >> 31);
 			V_FLAG = ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0101: // ADC
-			printf("ADC r%d = %x + %x + %x", Rd, Rn, shifter_operand, getFlag(C));
 			setRegister(Rd, Rn + shifter_operand + (getFlag(C)));
 			C_FLAG = ((Rn >> 31) + (shifter_operand >> 31)) > (readRegister(Rd) >> 31);
 			V_FLAG = ((Rn >> 31) == (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0110: // SBC
-			printf("SBC r%d = %x - %x - %x", Rd, Rn, shifter_operand, !(getFlag(C)));
 			setRegister(Rd, Rn - shifter_operand - !(getFlag(C)));
 			C_FLAG = !(((Rn >> 31) - (shifter_operand >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
 			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((Rn >> 31) != (readRegister(Rd) >> 31));
 			break;
 
 		case 0b0111: // RSC
-			printf("RSC r%d = %x - %x - %x", Rd, shifter_operand, Rn, !(getFlag(C)));
 			setRegister(Rd, shifter_operand - Rn - !(getFlag(C)));
 			C_FLAG = !(((shifter_operand >> 31) - (Rn >> 31) - (readRegister(Rd) >> 31)) & (1 << 31));
 			V_FLAG = ((Rn >> 31) != (shifter_operand >> 31)) && ((shifter_operand >> 31) != (readRegister(Rd) >> 31));
@@ -85,7 +76,6 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		case 0b1000: { // TST
 			if (!(instruction & (1 << 20)) && ((instruction >> 12) & 0xF) != 0)
 				return;
-			printf("TST %x & %x\n", Rn, shifter_operand);
 			const uint32_t alu_out = Rn & shifter_operand;
 			setFlag(N, alu_out & (1 << 31));
 			setFlag(Z, alu_out == 0);
@@ -96,7 +86,6 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		case 0b1001: { // TEQ
 			if (!(instruction & (1 << 20)) && ((instruction >> 12) & 0xF) != 0)
 				return;
-			printf("TEQ %x ^ %x\n", Rn, shifter_operand);
 			const uint32_t alu_out = Rn ^ shifter_operand;
 			setFlag(C, shifter_carry_out);
 			setFlag(N, alu_out & (1 << 31));
@@ -107,7 +96,6 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		case 0b1010: { // CMP
 			if (!(instruction & (1 << 20)) && ((instruction >> 12) & 0xF) != 0)
 				return;
-			printf("CMP %x - %x\n", Rn, shifter_operand);
 			const uint32_t alu_out = Rn - shifter_operand; 
 			//setC( (((Rn >> 31) - (shifter_operand >> 31) - (alu_out >> 31)) <= 1) );
 			setFlag(C, !(((Rn >> 31) - (shifter_operand >> 31) - (alu_out >> 31)) & (1 << 31)));
@@ -119,8 +107,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 
 		case 0b1011: { // CMN or CLZ
 			if (!(instruction & (1 << 20))) {
-				if (((((instruction >> 8) & 0xF) == 0xF) && (((instruction >> 16) & 0xF) == 0xF))) { // CLZ
-					printf("CLZ\n");
+				if ((((instruction >> 8) & 0xF) == 0xF) && (((instruction >> 16) & 0xF) == 0xF)) { // CLZ
 					uint8_t highestSetBit = 31;
 					for (; (highestSetBit > 0) && !((readRegister(Rm) >> highestSetBit) & 1); --highestSetBit);
 					setRegister(Rd, (readRegister(Rm) == 0) ? 32 : 32 - (highestSetBit + 1));
@@ -128,7 +115,7 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 				} else if (((instruction >> 12) & 0xF) != 0) // not (CMN or CLZ)
 					return;
 			}
-			printf("CMN %x + %x\n", Rn, shifter_operand);
+
 			const uint32_t alu_out = Rn + shifter_operand;
 			setFlag(N, alu_out & (1 << 31));
 			setFlag(Z, alu_out == 0);
@@ -138,33 +125,28 @@ void ARM::decodeDataProcessing(uint32_t instruction) {
 		}
 		
 		case 0b1100: // ORR
-			printf("ORR r%d = %x | %x", Rd, Rn, shifter_operand);
 			setRegister(Rd, Rn | shifter_operand);	
 			break;
 
 		case 0b1101: // MOV or CPY(pseudo-instruction)
 			if (((instruction >> 16) & 0xF) != 0)
 				return;
-			printf("MOV r%d", Rd);
 			setRegister(Rd, shifter_operand);
 			break;
 
 		case 0b1110: // BIC
-			printf("BIC r%d = %x & %x", Rd, Rn, ~shifter_operand);
 			setRegister(Rd, Rn & ~shifter_operand);
 			break;
 
 		case 0b1111: // MVN
 			if (((instruction >> 16) & 0xF) != 0)
 				return;
-			printf("MVN r%d", Rd);
 			setRegister(Rd, ~shifter_operand);
 			break;
 
 		default: break;
 	}
 
-	printf(" = %x\n", readRegister(Rd));
 	if (instruction & (1 << 20)) {
 		setFlag(C, C_FLAG);
 		setFlag(V, V_FLAG);
@@ -178,7 +160,6 @@ bool ARM::shifter(uint8_t shiftCase, uint32_t shift, uint32_t& shifter_operand, 
 	bool shifter_carry_out = false;
 	switch (shiftCase & 0x3) {
 		case 0b00: /*LSL*/
-			printf("\nLSL");	
 			if (shift == 0) 
 				shifter_carry_out = getFlag(C);
 			else if (shift < 32) {
@@ -194,7 +175,6 @@ bool ARM::shifter(uint8_t shiftCase, uint32_t shift, uint32_t& shifter_operand, 
 			break;
 
 		case 0b01: /*LSR*/
-			printf("\nLSR");
 			if (shift == 0) {
 				if (imm_or_reg == false) {
 					shifter_operand = 0;
@@ -218,7 +198,6 @@ bool ARM::shifter(uint8_t shiftCase, uint32_t shift, uint32_t& shifter_operand, 
 
 			break;
 		case 0b10: /*ASR*/
-			printf("\nASR");
 			if (shift == 0) {
 				if (imm_or_reg == false) {
 					shifter_operand = (Rm & (1 << 31)) ? 0xFFFFFFFF : 0;
@@ -235,7 +214,6 @@ bool ARM::shifter(uint8_t shiftCase, uint32_t shift, uint32_t& shifter_operand, 
 			}
 			break;
 		case 0b11: /*ROR or RRX*/
-			printf("\nROR or RRX");
 			if (shift == 0) {
 				if (imm_or_reg == false) {
 					shifter_operand = ((getFlag(C)) << 31) | (Rm >> 1);
@@ -258,7 +236,7 @@ bool ARM::shifter(uint8_t shiftCase, uint32_t shift, uint32_t& shifter_operand, 
 
 		default: break;
 	}
-	printf(" %d\n", shift);
+
 	return shifter_carry_out;
 }
 
@@ -277,7 +255,6 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 			address += (instruction & (1 << 23)) ? offset : -offset; // U Bit
 
 		if (instruction & (1 << 20)) { // Load
-			printf("LOAD\n");
 			setRegister(Rd, (instruction & (1 << 22)) ? mpu.read8(address) : mpu.read32(address)); 
 			/*
 			const uint32_t rotate = 8 * (address & 0x3);
@@ -286,11 +263,10 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 				data : ((data >> rotate) | (data << (32 - rotate)));
 			*/
 		}
-		else {// Store
-			printf("STORE\n"); 
-			if (instruction & (1 << 22)) // byte
+		else { // Store
+			if (instruction & (1 << 22)) // STRB
 				mpu.write8(address, readRegister(Rd));
-			else
+			else // STR
 				mpu.write32(address, readRegister(Rd));
 		}
 
@@ -312,7 +288,6 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 
 		switch (((((instruction>>20) & 0x1)<<2) | ((instruction>>5) & 0x3)) & 0x7) { // LSH bits
 			case 0b000: { // SWP
-				printf("\nSWP\n");
 				const uint32_t data = mpu.read32(readRegister(Rn));
 				const uint32_t rotate = 8 * (readRegister(Rn) & 0x3);
 				const uint32_t temp = (instruction & (1 << 22)) ? mpu.read8(readRegister(Rn)) : (instruction & (1 << 23))?
@@ -324,35 +299,29 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 				setRegister(Rd, temp);
 				break;
 			}
-			case 0b001: // Store halfword
-				printf("\nSTRH\n");
+			case 0b001: // Store halfword STRH
 				mpu.write16(address, readRegister(Rd));
 				break;
 
-			case 0b010: // Load doubleword
-				printf("\nLDRD\n");
+			case 0b010: // Load doubleword LDRD
 				setRegister(Rd, mpu.read32(address));
 				setRegister(Rd + 1, mpu.read32(address + 4));
 				break;
 
-			case 0b011: // Store doubleword
-				printf("\nSTRD\n");
+			case 0b011: // Store doubleword STRD
 				mpu.write32(address, readRegister(Rd));
 				mpu.write32(address + 4, readRegister(Rd + 1));
 				break;
 
-			case 0b101: // Load unsigned halfword
-				printf("\nLDRH\n");
+			case 0b101: // Load unsigned halfword LDRH
 				setRegister(Rd, mpu.read16(address));
 				break;
 
-			case 0b110: // Load signed byte
-				printf("\nLDRSB\n");
+			case 0b110: // Load signed byte LDRSB
 				setRegister(Rd, signExtend(mpu.read8(address), 8, 32));
 				break;
 
-			case 0b111: // Load signed halfword
-				printf("\nLDRSH\n");
+			case 0b111: // Load signed halfword LDRSH
 				setRegister(Rd, signExtend(mpu.read16(address), 16, 32));
 				break;
 
@@ -362,8 +331,7 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 		if (!(instruction & (1 << 24)))
 			setRegister(Rn, address += (instruction & (1 << 23)) ? offset : -offset);
 
-	} else if (((instruction >> 25) & 0x7) == 0b100) { // Multiple
-		printf("\nMultiple\n");
+	} else if (((instruction >> 25) & 0x7) == 0b100) { // Multiple Load or Store
 		for (uint8_t i = 0; i < 16; ++i) {
 			const uint32_t reg = (instruction & (1 << 23)) ? i : (15 - i);
 			if (instruction & (1 << reg)) {
@@ -383,8 +351,6 @@ void ARM::decodeLoadAndStore(uint32_t instruction) {
 
 	if ((instruction & (1 << 21))) // W bit
 		setRegister(Rn, address);
-	
-	printf("address value %x Rn value %x\n", address, registers[Rn]);
 }
 
 void ARM::decodeBranch(uint32_t instruction) {
@@ -419,41 +385,34 @@ void ARM::decodeMultiply(uint32_t instruction) {
 	bool Z_FLAG = getFlag(Z);
 
 	if ((((instruction >> 21) & 0x7) == 0) && (((instruction >> 12) & 0xF) == 0)) { // MUL
-		printf("MUL");
 		setRegister(Rd, readRegister(Rm) * (readRegister(Rs)));
 		Z_FLAG = (bool)(readRegister(Rd) == 0);
 	} else if (((instruction >> 21) & 0x7) == 0b001) { // MLA
-		printf("MLA");
 		setRegister(Rd, readRegister(Rm) * readRegister(Rs) + readRegister(Rn));
 		Z_FLAG = (bool)(readRegister(Rd) == 0);
 	} else if (((instruction >> 20) & 0xF) == 0b0100) { // UMAAL
-		printf("UMAAL");
 		const uint64_t result = (uint64_t)readRegister(Rm) * (uint64_t)readRegister(Rs) + 
 			(uint64_t)readRegister(Rn) + (uint64_t)readRegister(Rd);
 
 		setRegister(Rn, result & 0xFFFFFFFF);
 		setRegister(Rd, (result>>32) & 0xFFFFFFFF);
 	} else if (((instruction >> 21) & 0x7) == 0b101) { // UMLAL
-		printf("UMLAL");
 		const uint64_t result = (uint64_t)readRegister(Rm) * (uint64_t)readRegister(Rs);
 		setRegister(Rd, ((result >> 32) & 0xFFFFFFFF) + readRegister(Rd) + 
 			(bool)((((result >> 31) & 1) + (readRegister(Rn) >> 31)) > ((((result & 0xFFFFFFFF) + readRegister(Rn)) >> 31) & 1)));
 		setRegister(Rn, (result & 0xFFFFFFFF) + readRegister(Rn));
 		Z_FLAG = (bool)((readRegister(Rd) == 0) && (readRegister(Rn) == 0));
 	} else if (((instruction >> 21) & 0x7) == 0b100) { // UMULL
-		printf("UMULL");
 		const uint64_t result = (uint64_t)readRegister(Rm) * (uint64_t)readRegister(Rs);
 		setRegister(Rn, result & 0xFFFFFFFF);
 		setRegister(Rd, (result >> 32) & 0xFFFFFFFF);
 		Z_FLAG = (bool)((readRegister(Rd) == 0) && (readRegister(Rn) == 0));
 	} else if (((instruction >> 21) & 0x7) == 0b110) { // SMULL
-		printf("SMULL");
 		const int64_t result = (int64_t)(int32_t)readRegister(Rm) * (int64_t)(int32_t)readRegister(Rs); 
 		setRegister(Rn, result & 0xFFFFFFFF);
 		setRegister(Rd, (result >> 32) & 0xFFFFFFFF);
 		Z_FLAG = (bool)((readRegister(Rd) == 0) && (readRegister(Rn) == 0));
 	} else if (((instruction >> 21) & 0x7) == 0b111) {
-		printf("SMLAL");
 		const int64_t result = (int64_t)(int32_t)readRegister(Rm) * (int64_t)(int32_t)readRegister(Rs);
 		setRegister(Rd, ((result >> 32) & 0xFFFFFFFF) + readRegister(Rd) + 
 			(bool)((((result >> 31) & 1) + (readRegister(Rn) >> 31)) > ((((result & 0xFFFFFFFF) + readRegister(Rn)) >> 31) & 1)));
@@ -463,15 +422,12 @@ void ARM::decodeMultiply(uint32_t instruction) {
 	if (instruction & (1 << 20)) {// S bit
 		setFlag(N, readRegister(Rd) & (1 << 31));
 		setFlag(Z, Z_FLAG);
-	}
-	printf("\n");	
-
-
+	}	
 }
 
 void ARM::execute() {
 	usedPc = false;
-	while(true/*registers[15] != 0*/) {
+	while(registers[15] != 0/*true*/) {
 		if (mpu.faultStatus()) break;
 		uint32_t instruction = mpu.read32(readPc());
 		if (condition(instruction)) {
@@ -558,15 +514,6 @@ void ARM::setPc(uint32_t value) {
 	usedPc = true;
 }
 
-void ARM::dumpRegisters() {
-	for (uint8_t i = 0; i < 16; ++i) 
-		printf("\nregisters[%d] = %d hex = %x;\n", i, registers[i], registers[i]);
-}
-
-void ARM::printFlags() {
-	printf("C %d N %d Z %d V %d T %d", getFlag(C), getFlag(N), getFlag(Z), getFlag(V), getFlag(T));
-}
-
 MPU *ARM::getMpu() const {
 	return (MPU*)&mpu;
 }
@@ -582,18 +529,15 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 		const uint8_t Rn = (instruction >> 16) & 0xF;
 		if ((((instruction >> 20) & 0x3) == 0b11) && (((instruction >> 16) & 0xF) == 0xF) && (((instruction >> 8) & 0xF) == 0xF)) { // REV REV16 REVSH
 			if ((instruction & (1 << 22)) && ((instruction >> 5) & 0x7)  == 0b101) {// REVSH
-				printf("REVSH");
 				const uint16_t value = readRegister(Rm);
 				setRegister(Rd, ((value >> 8) & 0x00FF) | ((value<< 8) & 0xFF00) | 
 					(((value & (1 << 7)) ? 0xFFFF : 0) << 16));
 			} else if (!(instruction & (1 << 22))) { // REV OR REV16
 				const uint32_t value = readRegister(Rm);
 				if (((instruction >> 5) & 0x7) == 0b001) { //REV
-					printf("REV");
 					setRegister(Rd,  ((value>>24)&0xff) | ((value<<8)&0xff0000) | 
 						((value>>8)&0xff00) | ((value<<24)&0xff000000));
 				} else if (((instruction >> 5) & 0x7) == 0b101) { // REV16
-					printf("REV16");
 					setRegister(Rd, ((value >> 8) & 0xFF) | ((value & 0xFF) << 8) | 
 						(((value >> 24) & 0xFF) << 16) | (((value >> 16) & 0xFf) << 24));
 				}
@@ -607,64 +551,51 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 					setRegister(Rd, (signExtend(operand2 & 0xFF, 8, 16)) | 
 						((signExtend((operand2 >> 16) & 0xFF, 8, 16) << 16)));
 
-					if (Rn == 0b1111)
-						printf("SXTB16");
-					else {
-						printf("SXTAB16");
+					if (Rn != 0b1111)  // SXTAB16
 						setRegister(Rd, ((((readRegister(Rd) >> 16) & 0xFFFF) + ((operand >> 16) & 0xFFFF)) << 16) | 
 							(((readRegister(Rd) & 0xFFFF) + (operand & 0xFFFF)) & 0xFFFF));
-					}
+					
 				
 					break;
 				case 0b010: // SXTAB or SXTB
 					setRegister(Rd, signExtend(operand2 & 0xFF, 8, 32));
-					if (Rn == 0b1111)
-						printf("SXTB");
-					else {
-						printf("SXTAB");
+
+					if (Rn != 0b1111)  // SXTAB
 						setRegister(Rd, readRegister(Rd) + operand);
-					}
+					
 					break;
 
 				case 0b011: // SXTAH or SXTH
 					setRegister(Rd, signExtend(operand2 & 0xFFFF, 16, 32));
-					if (Rn == 0b1111)
-						printf("SXTH");
-					else {
-						printf("SXTAH");
+
+					if (Rn != 0b1111) // SXTAH
 						setRegister(Rd, readRegister(Rd) + operand);
-					}
+					
 					break;
 
 				case 0b100: // UXTAB16 or UXTB16
 					setRegister(Rd, operand2 & 0x00FF00FF);
-					if (Rn == 0b1111)
-						printf("UXTB16");
-					else {
-						printf("UXTAB16");
+
+					if (Rn != 0b1111) // UXTAB16
 						setRegister(Rd, ((((readRegister(Rd) >> 16) & 0xFF) + ((operand >> 16) & 0xFFFF)) << 16) |
 							(((readRegister(Rd) & 0xFFFF)) + (operand & 0xFFFF)) & 0xFFFF);
-					}
+					
 					break;
 
 				case 0b110: // UXTAB or UXTB
 					setRegister(Rd, operand2 & 0x000000FF);
-					if (Rn == 0b1111)
-						printf("UXTB");
-					else {
-						printf("UXTAB");
+					
+					if (Rn != 0b1111) // UXTAB
 						setRegister(Rd, readRegister(Rd) + operand);
-					}
+
 					break;
 
 				case 0b111: // UXTAH or UXTH
 					setRegister(Rd, operand2 & 0x0000FFFF);
-					if (Rn == 0b1111)
-						printf("UXTH");
-					else {
-						printf("UXTAH");
+
+					if (Rn != 0b1111) // UXTAH
 						setRegister(Rd, readRegister(Rd) + operand);
-					}
+					
 					break;
 
 				default: break;
@@ -681,38 +612,31 @@ void ARM::decodeMediaInstructions(uint32_t instruction) {
 		const int32_t product2 = (int16_t)((readRegister(Rm) >> 16) & 0xFFFF) * (int16_t)((operand2 >> 16) & 0xFFFF);
 		if ((((instruction >> 20) & 0x7) == 0)) { // SMLAD or SMUAD or SMLSD or SMUSD
 			if (((instruction >> 6) & 0x3) == 0) { // SMUAD or SMLAD
-				if (Rn == 0b1111) {
-					printf("SMUAD");
+				if (Rn == 0b1111) { // SMUAD
 					setRegister(Rd, product1 + product2);
 					if (((product1 >> 31) == (product2 >> 31)) && ((product1 >> 31) != (readRegister(Rd) >> 31)))
 						setFlag(Q, 1);
-				} else {
-					printf("SMLAD");
+				} else { // SMLAD
 					setRegister(Rd,(readRegister(Rn) + product1 + product2));
 					if (((readRegister(Rn) >> 31) == ((uint32_t)(product1 + product2) >> 31)) && ((readRegister(Rn) >> 31) != (readRegister(Rd) >> 31)))
 						setFlag(Q, 1);
 				}
 			} else if (((instruction >> 6) & 0x3) == 0b01) { // SMLSD or SMUSD
-				if (Rn == 0b1111) {
-					printf("SMUSD");
+				if (Rn == 0b1111) // SMUSD
 					setRegister(Rd, product1 - product2);
-				} else {
-					printf("SMLSD");
+				else { // SMLSD
 					setRegister(Rd, readRegister(Rn) + (product1 - product2)); // signed subtraction
 					if (((readRegister(Rn) >> 31) == ((uint32_t)(product1 - product2) >> 31)) && ((readRegister(Rn) >> 31) != (readRegister(Rd) >> 31)))
 						setFlag(Q, 1);
 				}
 			}
 		} else if ((((instruction >> 20) & 0x7) == 0b100) && (((instruction >> 6) & 0x3) == 0)) { // SMLALD
-			printf("SMLALD");
 			int64_t result = ((((int64_t)readRegister(Rd) & 0xFFFFFFFF) << 32) | (readRegister(Rn) & 0xFFFFFFFF));
 			result += (int64_t)product1 + (int64_t)product2;		
 			setRegister(Rn, result & 0xFFFFFFFF);
 			setRegister(Rd, (result >> 32) & 0xFFFFFFFF);
 		}
 	} 
-	printf("\n");
-
 }
 */
 uint32_t ARM::signExtend(uint32_t value, uint8_t bits, uint8_t extend) {
