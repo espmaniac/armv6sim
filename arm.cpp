@@ -419,7 +419,7 @@ void ARM::decodeMultiply(uint32_t instruction) {
 		setRegister(Rn, result & 0xFFFFFFFF);
 		setRegister(Rd, (result >> 32) & 0xFFFFFFFF);
 		Z_FLAG = (bool)((readRegister(Rd) == 0) && (readRegister(Rn) == 0));
-	} else if (((instruction >> 21) & 0x7) == 0b111) {
+	} else if (((instruction >> 21) & 0x7) == 0b111) { // SMLAL
 		const int64_t result = (int64_t)(int32_t)readRegister(Rm) * (int64_t)(int32_t)readRegister(Rs);
 		setRegister(Rd, ((result >> 32) & 0xFFFFFFFF) + readRegister(Rd) + 
 			(bool)((((result >> 31) & 1) + (readRegister(Rn) >> 31)) > ((((result & 0xFFFFFFFF) + readRegister(Rn)) >> 31) & 1)));
